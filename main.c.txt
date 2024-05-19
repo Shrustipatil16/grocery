@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_DATA 100
+#define BUFFER_SIZE 256
+#define FILENAME "data.txt"
+
+// Function to save data to a file
+void save_to_file(char data[MAX_DATA][BUFFER_SIZE], int data_count, const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("Failed to open file for writing");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < data_count; i++) {
+        fprintf(file, "%s\n", data[i]);
+    }
+
+    fclose(file);
+}
+
+// Function to load data from a file
+int load_from_file(char data[MAX_DATA][BUFFER_SIZE], const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        return 0;
+    }
+
+    int data_count = 0;
+    while (fgets(data[data_count], BUFFER_SIZE, file) != NULL) {
+        data[data_count][strcspn(data[data_count], "\n")] = '\0'; // Remove the newline character
+        data_count++;
+
+        if (data_count >= MAX_DATA) {
+            break;
+        }
+    }
+
+    fclose(file);
+    return data_count;
+}
+
+// Function to search data
+void search_data(char data[MAX_DATA][BUFFER_SIZE], int data_count, const char *query) {
+    printf("Search results for '%s':\n", query);
+    for (int i = 0; i < data_count; i++) {
+        if (strstr(data[i], query) != NULL) {
+            printf("%s\n", data[i]);
+        }
+    }
+}
+
+int main() {
+    char data[MAX_DATA][BUFFER_SIZE];
+    int data_count = 0;
+    char input[BUFFER_SIZE];
+    char query[BUFFER_SIZE];
+
+    data_count = load_from_file(data, FILENAME);
+
+    while (1) {
+        printf("Enter data (type 'exit' to stop, 'search' to search): ");
+        fgets(input, BUFFER_SIZE, stdin);
+        input[strcspn(input, "\n")] = '\0'; // Remove the newline character
+
+        if (strcmp(input, "exit") == 0) {
+            break;
+        }
+
+        if (strcmp(input, "search") == 0) {
+            printf("Enter search query: ");
+            fgets(query, BUFFER_SIZE, stdin);
+            query[strcspn(query, "\n")] = '\0'; // Remove the newline character
+            search_data(data, data_count, query);
+            continue;
+        }
+
+        strcpy(data[data_count++], input);
+
+        if (data_count >= MAX_DATA) {
+            printf("Data limit reached.\n");
+            break;
+        }
+    }
+
+    save_to_file(data, data_count, FILENAME);
+
+    printf("Data collected:\n");
+    for (int i = 0; i < data_count; i++) {
+        printf("%s\n", data[i]);
+    }
+
+    return 0;
+}
